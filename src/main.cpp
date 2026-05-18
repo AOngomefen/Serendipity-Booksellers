@@ -1,61 +1,23 @@
 //
 //  main.cpp
-//  BooksellersSD — Part 13
+//  BooksellersSD — Part 14
 //
 //  Created by Andrea on 3/8/26.
-//  Modified for Chapter 13: BookData class with private members
+//  Modified for Chapter 14: bookMatch, InventoryFile, InputValidator
 //
 
 #include "serendipity.h"
 
-fstream invFile;
+InventoryFile invDB("inventory.dat");
 
 int main() {
-    invFile.open(INV_FILENAME, ios::in | ios::out | ios::binary);
-
-    if (!invFile) {
-        invFile.open(INV_FILENAME, ios::out | ios::binary);
-        if (!invFile) {
-            cerr << "ERROR: Could not create inventory file." << endl;
-            return 1;
-        }
-        BookData empty = {};
-        for (int i = 0; i < MAX_BOOKS; i++)
-            invFile.write(reinterpret_cast<char*>(&empty), sizeof(BookData));
-        invFile.close();
-
-        invFile.open(INV_FILENAME, ios::in | ios::out | ios::binary);
-        if (!invFile) {
-            cerr << "ERROR: Could not open inventory file." << endl;
-            return 1;
-        }
+    if (!invDB.open()) {
+        cerr << "ERROR: Could not open inventory file." << endl;
+        return 1;
     }
 
     mainmenu();
 
-    invFile.close();
+    invDB.close();
     return 0;
-}
-
-bool readRecord(int slot, BookData& b) {
-    invFile.clear();
-    invFile.seekg(recordOffset(slot));
-    return static_cast<bool>(invFile.read(reinterpret_cast<char*>(&b), sizeof(BookData)));
-}
-
-void writeRecord(int slot, const BookData& b) {
-    invFile.clear();
-    invFile.seekp(recordOffset(slot));
-    invFile.write(reinterpret_cast<const char*>(&b), sizeof(BookData));
-    invFile.flush();
-}
-
-int getBookCount() {
-    int count = 0;
-    BookData b;
-    for (int i = 0; i < MAX_BOOKS; i++) {
-        if (readRecord(i, b) && !b.isEmpty())
-            count++;
-    }
-    return count;
 }

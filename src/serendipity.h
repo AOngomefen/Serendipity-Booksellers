@@ -1,9 +1,9 @@
 //
 //  serendipity.h
-//  BooksellersSD — Part 13
+//  BooksellersSD — Part 14
 //
 //  Created by Andrea on 3/8/26.
-//  Modified for Chapter 13: BookData class with private members
+//  Modified for Chapter 14: bookMatch, InventoryFile, InputValidator
 //
 
 #ifndef serendipity_h
@@ -55,23 +55,41 @@ public:
     // Utility
     int  isEmpty()   const;
     void removeBook();
+    bool bookMatch(const char* searchStr) const;
 };
 
-extern fstream invFile;
-const  char    INV_FILENAME[] = "inventory.dat";
 const  int     MAX_BOOKS      = 20;
 
 void strUpper(char* str);
 
+class InventoryFile {
+private:
+    fstream file;
+    const char* filename;
 
-inline streampos recordOffset(int slot){ return slot * sizeof(BookData); }
+public:
+    InventoryFile(const char* fname);
+    ~InventoryFile();
 
-bool readRecord (int slot, BookData& b);
+    bool open();
+    void close();
+    bool isOpen() const;
 
-// Write b to the file at the given slot.
-void writeRecord(int slot, const BookData& b);
+    bool readRecord (int slot, BookData& b);
+    void writeRecord(int slot, const BookData& b);
+    int  getBookCount();
 
-int  getBookCount();
+    static streampos recordOffset(int slot);
+};
+
+extern InventoryFile invDB;
+
+class InputValidator {
+public:
+    static int  getInt(const char* prompt, int min, int max);
+    static double getDouble(const char* prompt);
+    static void getString(const char* prompt, char* buf, int maxLen);
+};
 
 int mainmenu();
 int invmenu();

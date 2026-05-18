@@ -1,9 +1,9 @@
 //
 //  bookinfo.cpp
-//  BooksellersSD — Part 13
+//  BooksellersSD — Part 14
 //
 //  Created by Andrea on 3/8/26.
-//  Modified for Chapter 13: BookData class member functions
+//  Modified for Chapter 14: bookMatch, InventoryFile, InputValidator
 //
 
 #include "serendipity.h"
@@ -39,6 +39,92 @@ int BookData::isEmpty() const {
 
 void BookData::removeBook() {
     memset(this, 0, sizeof(BookData));
+}
+
+bool BookData::bookMatch(const char* searchStr) const {
+    return strstr(bookTitle, searchStr) != nullptr;
+}
+
+// InventoryFile implementation
+InventoryFile::InventoryFile(const char* fname) : filename(fname) {}
+
+InventoryFile::~InventoryFile() {
+    if (file.is_open()) file.close();
+}
+
+bool InventoryFile::open() {
+    file.open(filename, ios::in | ios::out | ios::binary);
+    if (!file) {
+        file.open(filename, ios::out | ios::binary);
+        if (!file) return false;
+        BookData empty = {};
+        for (int i = 0; i < MAX_BOOKS; i++)
+            file.write(reinterpret_cast<char*>(&empty), sizeof(BookData));
+        file.close();
+        file.open(filename, ios::in | ios::out | ios::binary);
+        if (!file) return false;
+    }
+    return true;
+}
+
+void InventoryFile::close() { file.close(); }
+
+bool InventoryFile::isOpen() const { return file.is_open(); }
+
+streampos InventoryFile::recordOffset(int slot) {
+    return slot * sizeof(BookData);
+}
+
+bool InventoryFile::readRecord(int slot, BookData& b) {
+    file.clear();
+    file.seekg(recordOffset(slot));
+    return static_cast<bool>(file.read(reinterpret_cast<char*>(&b), sizeof(BookData)));
+}
+
+void InventoryFile::writeRecord(int slot, const BookData& b) {
+    file.clear();
+    file.seekp(recordOffset(slot));
+    file.write(reinterpret_cast<const char*>(&b), sizeof(BookData));
+    file.flush();
+}
+
+int InventoryFile::getBookCount() {
+    int count = 0;
+    BookData b;
+    for (int i = 0; i < MAX_BOOKS; i++) {
+        if (readRecord(i, b) && !b.isEmpty())
+            count++;
+    }
+    return count;
+}
+
+// InputValidator implementation
+int InputValidator::getInt(const char* prompt, int min, int max) {
+    int val = min - 1;
+    cout << prompt;
+    while (!(cin >> val) || val < min || val > max) {
+        cout << "Please enter a number in the range "
+             << min << "-" << max << ": ";
+        cin.clear();
+        cin.ignore(1000, '\n');
+    }
+    return val;
+}
+
+double InputValidator::getDouble(const char* prompt) {
+    double val;
+    cout << prompt;
+    while (!(cin >> val)) {
+        cout << "Invalid input. " << prompt;
+        cin.clear();
+        cin.ignore(1000, '\n');
+    }
+    return val;
+}
+
+void InputValidator::getString(const char* prompt, char* buf, int maxLen) {
+    cout << prompt;
+    cin.getline(buf, maxLen);
 }
 
 int bookinfo(const BookData& b, BookInfoMode mode) {

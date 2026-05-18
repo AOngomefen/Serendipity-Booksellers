@@ -1,9 +1,9 @@
 //
 //  reports.cpp
-//  BooksellersSD — Part 13
+//  BooksellersSD — Part 14
 //
 //  Created by Andrea on 3/8/26.
-//  Modified for Chapter 13: BookData class with private members
+//  Modified for Chapter 14: bookMatch, InventoryFile, InputValidator
 //
 
 #include "serendipity.h"
@@ -24,12 +24,7 @@ int reports() {
         cout << "7. Return to Main Menu\n";
         cout << endl;
 
-        cout << "Enter Your Choice: ";
-        cin >> choice;
-        while (choice < 1 || choice > 7) {
-            cout << "Please enter a number in the range 1-7: ";
-            cin >> choice;
-        }
+        choice = InputValidator::getInt("Enter Your Choice: ", 1, 7);
 
         switch (choice) {
             case 1: cout << "--------------------------------------------------" << endl; repListing();   break;
@@ -60,7 +55,7 @@ static int loadAllRecords(BookData arr[], int maxSize) {
     int count = 0;
     BookData b;
     for (int i = 0; i < maxSize && count < maxSize; i++) {
-        if (!readRecord(i, b)) break;
+        if (!invDB.readRecord(i, b)) break;
         if (!b.isEmpty())
             arr[count++] = b;
     }
@@ -77,7 +72,7 @@ void repListing() {
     BookData b;
     bool anyFound = false;
     for (int i = 0; i < MAX_BOOKS; i++) {
-        if (!readRecord(i, b)) break;
+        if (!invDB.readRecord(i, b)) break;
         if (!b.isEmpty()) {
             bookinfo(b, FULL);
             cout << "--------------------------------------------------" << endl;
@@ -99,7 +94,7 @@ void repWholesale() {
     double total = 0.0;
     BookData b;
     for (int i = 0; i < MAX_BOOKS; i++) {
-        if (!readRecord(i, b)) break;
+        if (!invDB.readRecord(i, b)) break;
         if (!b.isEmpty()) {
             bookinfo(b, WHOLESALE);
             cout << "--------------------------------------------------" << endl;
@@ -121,7 +116,7 @@ void repRetail() {
     double total = 0.0;
     BookData b;
     for (int i = 0; i < MAX_BOOKS; i++) {
-        if (!readRecord(i, b)) break;
+        if (!invDB.readRecord(i, b)) break;
         if (!b.isEmpty()) {
             bookinfo(b, RETAIL);
             cout << "--------------------------------------------------" << endl;
