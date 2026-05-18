@@ -1,9 +1,9 @@
 //
 //  cashier.cpp
-//  BooksellersSD — Part 15
+//  BooksellersSD — Part 16
 //
 //  Created by Andrea on 3/8/26.
-//  Modified for Chapter 15: Inheritance, InventoryBook, SoldBook
+//  Modified for Chapter 16: Exceptions, Templates, and the STL
 //
 
 #include "serendipity.h"
@@ -17,8 +17,20 @@ int cashier() {
     int numTitles;
     numTitles = InputValidator::getInt("How many titles is the customer purchasing? ", 1, 20);
 
-    SoldBook* cart = new SoldBook[numTitles];
-    int* slots = new int[numTitles];
+    SoldBook* cart = nullptr;
+    int* slots = nullptr;
+    try {
+        cart  = new SoldBook[numTitles];
+        slots = new int[numTitles];
+    }
+    catch (const bad_alloc& e) {
+        cerr << "\n*** CRITICAL ERROR ***" << endl;
+        cerr << "FATAL: Memory allocation failed for " << numTitles
+             << " SoldBook objects. " << e.what() << endl;
+        cerr << "Program will now terminate." << endl;
+        delete[] cart;
+        exit(1);
+    }
     int booksListed = 0;
 
     SoldBook::resetTotal();

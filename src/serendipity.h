@@ -1,9 +1,9 @@
 //
 //  serendipity.h
-//  BooksellersSD — Part 15
+//  BooksellersSD — Part 16
 //
 //  Created by Andrea on 3/8/26.
-//  Modified for Chapter 15: Inheritance, InventoryBook, SoldBook
+//  Modified for Chapter 16: Exceptions, Templates, and the STL
 //
 
 #ifndef serendipity_h
@@ -17,6 +17,8 @@
 #include <cstring>
 #include <cctype>
 #include <fstream>
+#include <stdexcept>
+#include <new>
 
 using namespace std;
 
