@@ -1,9 +1,9 @@
 //
 //  reports.cpp
-//  BooksellersSD — Part 12
+//  BooksellersSD — Part 14
 //
-//  Created by Andrea 👾 on 3/8/26.
-//  Modified for Chapter 12: File-based inventory
+//  Created by Andrea on 3/8/26.
+//  Modified for Chapter 14: bookMatch, InventoryFile, InputValidator
 //
 
 #include "serendipity.h"
@@ -24,12 +24,7 @@ int reports() {
         cout << "7. Return to Main Menu\n";
         cout << endl;
 
-        cout << "Enter Your Choice: ";
-        cin >> choice;
-        while (choice < 1 || choice > 7) {
-            cout << "Please enter a number in the range 1-7: ";
-            cin >> choice;
-        }
+        choice = InputValidator::getInt("Enter Your Choice: ", 1, 7);
 
         switch (choice) {
             case 1: cout << "--------------------------------------------------" << endl; repListing();   break;
@@ -60,8 +55,8 @@ static int loadAllRecords(BookData arr[], int maxSize) {
     int count = 0;
     BookData b;
     for (int i = 0; i < maxSize && count < maxSize; i++) {
-        if (!readRecord(i, b)) break;
-        if (!isEmpty(b))
+        if (!invDB.readRecord(i, b)) break;
+        if (!b.isEmpty())
             arr[count++] = b;
     }
     return count;
@@ -77,8 +72,8 @@ void repListing() {
     BookData b;
     bool anyFound = false;
     for (int i = 0; i < MAX_BOOKS; i++) {
-        if (!readRecord(i, b)) break;
-        if (!isEmpty(b)) {
+        if (!invDB.readRecord(i, b)) break;
+        if (!b.isEmpty()) {
             bookinfo(b, FULL);
             cout << "--------------------------------------------------" << endl;
             anyFound = true;
@@ -99,11 +94,11 @@ void repWholesale() {
     double total = 0.0;
     BookData b;
     for (int i = 0; i < MAX_BOOKS; i++) {
-        if (!readRecord(i, b)) break;
-        if (!isEmpty(b)) {
+        if (!invDB.readRecord(i, b)) break;
+        if (!b.isEmpty()) {
             bookinfo(b, WHOLESALE);
             cout << "--------------------------------------------------" << endl;
-            total += b.wholesale * b.qtyOnHand;
+            total += b.getWholesale() * b.getQty();
         }
     }
     cout << "[ Total Wholesale Value: $" << fixed << setprecision(2) << total << " ]" << endl;
@@ -121,11 +116,11 @@ void repRetail() {
     double total = 0.0;
     BookData b;
     for (int i = 0; i < MAX_BOOKS; i++) {
-        if (!readRecord(i, b)) break;
-        if (!isEmpty(b)) {
+        if (!invDB.readRecord(i, b)) break;
+        if (!b.isEmpty()) {
             bookinfo(b, RETAIL);
             cout << "--------------------------------------------------" << endl;
-            total += b.retail * b.qtyOnHand;
+            total += b.getRetail() * b.getQty();
         }
     }
     cout << "[ Total Retail Value: $" << fixed << setprecision(2) << total << " ]" << endl;
@@ -147,7 +142,7 @@ void repQty() {
     for (int i = 0; i < size - 1; i++) {
         int maxIdx = i;
         for (int j = i + 1; j < size; j++)
-            if (arr[j].qtyOnHand > arr[maxIdx].qtyOnHand) maxIdx = j;
+            if (arr[j].getQty() > arr[maxIdx].getQty()) maxIdx = j;
         swap(arr[i], arr[maxIdx]);
     }
 
@@ -173,7 +168,7 @@ void repCost() {
     for (int i = 0; i < size - 1; i++) {
         int maxIdx = i;
         for (int j = i + 1; j < size; j++)
-            if (arr[j].retail > arr[maxIdx].retail) maxIdx = j;
+            if (arr[j].getRetail() > arr[maxIdx].getRetail()) maxIdx = j;
         swap(arr[i], arr[maxIdx]);
     }
 
@@ -199,7 +194,7 @@ void repAge() {
     for (int i = 0; i < size - 1; i++) {
         int minIdx = i;
         for (int j = i + 1; j < size; j++)
-            if (strcmp(arr[j].dateAdded, arr[minIdx].dateAdded) < 0) minIdx = j;
+            if (strcmp(arr[j].getDateAdded(), arr[minIdx].getDateAdded()) < 0) minIdx = j;
         swap(arr[i], arr[minIdx]);
     }
 

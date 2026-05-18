@@ -1,9 +1,9 @@
 //
 //  serendipity.h
-//  BooksellersSD — Part 12
+//  BooksellersSD — Part 14
 //
-//  Created by Andrea 👾 on 3/8/26.
-//  Modified for Chapter 12: File-based inventory
+//  Created by Andrea on 3/8/26.
+//  Modified for Chapter 14: bookMatch, InventoryFile, InputValidator
 //
 
 #ifndef serendipity_h
@@ -20,7 +20,8 @@
 
 using namespace std;
 
-struct BookData {
+class BookData {
+private:
     char   bookTitle[51];
     char   isbn[14];
     char   author[31];
@@ -29,34 +30,66 @@ struct BookData {
     int    qtyOnHand;
     double wholesale;
     double retail;
+
+public:
+    // Mutators
+    void setTitle    (const char* str);
+    void setISBN     (const char* str);
+    void setAuthor   (const char* str);
+    void setPub      (const char* str);
+    void setDateAdded(const char* str);
+    void setQty      (int qty);
+    void setWholesale(double val);
+    void setRetail   (double val);
+
+    // Accessors
+    const char* getTitle()     const;
+    const char* getISBN()      const;
+    const char* getAuthor()    const;
+    const char* getPub()       const;
+    const char* getDateAdded() const;
+    int         getQty()       const;
+    double      getWholesale() const;
+    double      getRetail()    const;
+
+    // Utility
+    int  isEmpty()   const;
+    void removeBook();
+    bool bookMatch(const char* searchStr) const;
 };
 
-extern fstream invFile;
-const  char    INV_FILENAME[] = "inventory.dat";
 const  int     MAX_BOOKS      = 20;
-
-void setTitle    (char* str,  BookData& b);
-void setISBN     (char* str,  BookData& b);
-void setAuthor   (char* str,  BookData& b);
-void setPub      (char* str,  BookData& b);
-void setDateAdded(char* str,  BookData& b);
-void setQty      (int qty,    BookData& b);
-void setWholesale(double val, BookData& b);
-void setRetail   (double val, BookData& b);
-int  isEmpty     (const BookData& b);   // 1 = empty slot
-void removeBook  (BookData& b);         // zeroes the struct
 
 void strUpper(char* str);
 
+class InventoryFile {
+private:
+    fstream file;
+    const char* filename;
 
-inline streampos recordOffset(int slot){ return slot * sizeof(BookData); }
+public:
+    InventoryFile(const char* fname);
+    ~InventoryFile();
 
-bool readRecord (int slot, BookData& b);
+    bool open();
+    void close();
+    bool isOpen() const;
 
-// Write b to the file at the given slot.
-void writeRecord(int slot, const BookData& b);
+    bool readRecord (int slot, BookData& b);
+    void writeRecord(int slot, const BookData& b);
+    int  getBookCount();
 
-int  getBookCount();
+    static streampos recordOffset(int slot);
+};
+
+extern InventoryFile invDB;
+
+class InputValidator {
+public:
+    static int  getInt(const char* prompt, int min, int max);
+    static double getDouble(const char* prompt);
+    static void getString(const char* prompt, char* buf, int maxLen);
+};
 
 int mainmenu();
 int invmenu();

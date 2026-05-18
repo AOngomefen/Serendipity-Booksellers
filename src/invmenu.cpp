@@ -1,9 +1,9 @@
 //
 //  invmenu.cpp
-//  BooksellersSD — Part 12
+//  BooksellersSD — Part 14
 //
-//  Created by Andrea 👾 on 3/8/26.
-//  Modified for Chapter 12: File-based inventory
+//  Created by Andrea on 3/8/26.
+//  Modified for Chapter 14: bookMatch, InventoryFile, InputValidator
 //
 
 #include "serendipity.h"
@@ -23,13 +23,7 @@ int invmenu() {
         cout << "5. Return to the Main Menu\n";
         cout << endl;
 
-        cout << "Enter Your Choice: ";
-        cin >> choice;
-
-        while (choice < 1 || choice > 5) {
-            cout << "Please enter a number in the range 1-5: ";
-            cin >> choice;
-        }
+        choice = InputValidator::getInt("Enter Your Choice: ", 1, 5);
 
         switch (choice) {
             case 1: cout << "--------------------------------------------------" << endl; lookUpBook(); break;
@@ -57,14 +51,11 @@ static int findBook(const char* prompt) {
 
     BookData b;
     for (int i = 0; i < MAX_BOOKS; i++) {
-        if (!readRecord(i, b)) break;
-        if (isEmpty(b)) continue;
+        if (!invDB.readRecord(i, b)) break;
+        if (b.isEmpty()) continue;
 
-        char title[51];
-        strncpy(title, b.bookTitle, 51);
-        // bookTitle is already stored uppercase, so compare directly.
-        if (strstr(title, search) != nullptr) {
-            cout << "Found: " << b.bookTitle << endl;
+        if (b.bookMatch(search)) {
+            cout << "Found: " << b.getTitle() << endl;
             cout << "Is this the book you are looking for? (y/n): ";
             char confirm;
             cin >> confirm;
@@ -86,7 +77,7 @@ void lookUpBook() {
         int slot = findBook("Enter partial or full book title: ");
         if (slot != -1) {
             BookData b;
-            readRecord(slot, b);
+            invDB.readRecord(slot, b);
             bookinfo(b, FULL);
         }
 
@@ -108,8 +99,8 @@ void addBook() {
         int slot = -1;
         BookData b;
         for (int i = 0; i < MAX_BOOKS; i++) {
-            if (!readRecord(i, b)) break;
-            if (isEmpty(b)) { slot = i; break; }
+            if (!invDB.readRecord(i, b)) break;
+            if (b.isEmpty()) { slot = i; break; }
         }
 
         if (slot == -1) {
@@ -120,45 +111,37 @@ void addBook() {
         // Re-use b (currently zeroed / empty) to hold the new data.
         char temp[51];
 
-        cout << "Enter Book Title: ";
-        cin.getline(temp, 51);
+        InputValidator::getString("Enter Book Title: ", temp, 51);
         strUpper(temp);
-        setTitle(temp, b);
+        b.setTitle(temp);
 
-        cout << "Enter Book ISBN: ";
-        cin.getline(temp, 14);
+        InputValidator::getString("Enter Book ISBN: ", temp, 14);
         strUpper(temp);
-        setISBN(temp, b);
+        b.setISBN(temp);
 
-        cout << "Enter Book Author in the format (Last, First): ";
-        cin.getline(temp, 31);
+        InputValidator::getString("Enter Book Author in the format (Last, First): ", temp, 31);
         strUpper(temp);
-        setAuthor(temp, b);
+        b.setAuthor(temp);
 
-        cout << "Enter Book Publisher: ";
-        cin.getline(temp, 31);
+        InputValidator::getString("Enter Book Publisher: ", temp, 31);
         strUpper(temp);
-        setPub(temp, b);
+        b.setPub(temp);
 
-        cout << "Enter Date Added in the Format (MM-DD-YYYY): ";
-        cin.getline(temp, 11);
-        setDateAdded(temp, b);
+        InputValidator::getString("Enter Date Added in the Format (MM-DD-YYYY): ", temp, 11);
+        b.setDateAdded(temp);
 
         int qty;
-        cout << "Enter Book Quantity on Hand: ";
-        cin >> qty;
-        setQty(qty, b);
+        qty = InputValidator::getInt("Enter Book Quantity on Hand: ", 0, 9999);
+        b.setQty(qty);
 
         double val;
-        cout << "Enter Book Wholesale Cost: $";
-        cin >> val;
-        setWholesale(val, b);
+        val = InputValidator::getDouble("Enter Book Wholesale Cost: $");
+        b.setWholesale(val);
 
-        cout << "Enter Book Retail Price: $";
-        cin >> val;
-        setRetail(val, b);
+        val = InputValidator::getDouble("Enter Book Retail Price: $");
+        b.setRetail(val);
 
-        writeRecord(slot, b);
+        invDB.writeRecord(slot, b);
         cout << "--- Book saved to inventory! ---" << endl;
 
         cout << "Do you have another book to add (y/n)? : ";
@@ -177,37 +160,33 @@ void editBook() {
     if (slot == -1) return;
 
     BookData b;
-    readRecord(slot, b);
+    invDB.readRecord(slot, b);
     bookinfo(b, FULL);
 
     char done = 'n';
     do {
-        int change = 0;
         cout << "--------------------------------------------------" << endl;
         cout << "Which field do you wish to change?\n";
         cout << "1. Book Title\n2. Book ISBN\n3. Book Author\n4. Book Publisher\n";
         cout << "5. Date Added\n6. Qty on Hand\n7. Wholesale Cost\n8. Retail Price\n";
 
-        while (change < 1 || change > 8) {
-            cout << "Please enter a number in the range 1-8: ";
-            cin >> change;
-        }
+        int change = InputValidator::getInt("Enter choice: ", 1, 8);
         cin.ignore(1000, '\n');
 
         char temp[51];
         switch (change) {
-            case 1: cout << "Enter New Book Title: ";         cin.getline(temp, 51); strUpper(temp); setTitle(temp, b);     break;
-            case 2: cout << "Enter New ISBN: ";               cin.getline(temp, 14); strUpper(temp); setISBN(temp, b);      break;
-            case 3: cout << "Enter New Author: ";             cin.getline(temp, 31); strUpper(temp); setAuthor(temp, b);    break;
-            case 4: cout << "Enter New Publisher: ";          cin.getline(temp, 31); strUpper(temp); setPub(temp, b);       break;
-            case 5: cout << "Enter New Date (MM-DD-YYYY): ";  cin.getline(temp, 11);                 setDateAdded(temp, b); break;
-            case 6: { int q;    cout << "Enter New Qty: ";         cin >> q; setQty(q, b);        break; }
-            case 7: { double w; cout << "Enter New Wholesale: $";  cin >> w; setWholesale(w, b);  break; }
-            case 8: { double r; cout << "Enter New Retail: $";     cin >> r; setRetail(r, b);     break; }
+            case 1: cout << "Enter New Book Title: ";         cin.getline(temp, 51); strUpper(temp); b.setTitle(temp);     break;
+            case 2: cout << "Enter New ISBN: ";               cin.getline(temp, 14); strUpper(temp); b.setISBN(temp);      break;
+            case 3: cout << "Enter New Author: ";             cin.getline(temp, 31); strUpper(temp); b.setAuthor(temp);    break;
+            case 4: cout << "Enter New Publisher: ";          cin.getline(temp, 31); strUpper(temp); b.setPub(temp);       break;
+            case 5: cout << "Enter New Date (MM-DD-YYYY): ";  cin.getline(temp, 11);                 b.setDateAdded(temp); break;
+            case 6: { int q;    cout << "Enter New Qty: ";         cin >> q; b.setQty(q);        break; }
+            case 7: { double w; cout << "Enter New Wholesale: $";  cin >> w; b.setWholesale(w);  break; }
+            case 8: { double r; cout << "Enter New Retail: $";     cin >> r; b.setRetail(r);     break; }
         }
 
-        // Write the updated struct back to the file over the old record.
-        writeRecord(slot, b);
+        // Write the updated record back to the file.
+        invDB.writeRecord(slot, b);
         cout << "--- Record updated! ---" << endl;
 
         cout << "Done changing? (y/n): ";
@@ -226,7 +205,7 @@ void deleteBook() {
     if (slot == -1) return;
 
     BookData b;
-    readRecord(slot, b);
+    invDB.readRecord(slot, b);
     bookinfo(b, FULL);
 
     char confirm;
@@ -234,8 +213,8 @@ void deleteBook() {
     cin >> confirm;
 
     if (confirm == 'y' || confirm == 'Y') {
-        removeBook(b);          // zeroes the struct in memory
-        writeRecord(slot, b);   // writes the zeroed record back to the file
+        b.removeBook();           // zeroes the object in memory
+        invDB.writeRecord(slot, b); // writes the zeroed record back to the file
         cout << "Book successfully deleted from inventory." << endl;
     } else {
         cout << "Deletion cancelled." << endl;

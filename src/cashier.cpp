@@ -1,9 +1,9 @@
 //
 //  cashier.cpp
-//  BooksellersSD — Part 12
+//  BooksellersSD — Part 14
 //
-//  Created by Andrea 👾 on 3/8/26.
-//  Modified for Chapter 12: File-based inventory
+//  Created by Andrea on 3/8/26.
+//  Modified for Chapter 14: bookMatch, InventoryFile, InputValidator
 //
 
 #include "serendipity.h"
@@ -29,8 +29,8 @@ int cashier() {
         int  found = -1;
         BookData b;
         for (int i = 0; i < MAX_BOOKS; i++) {
-            if (!readRecord(i, b)) break;
-            if (!isEmpty(b) && strcmp(b.isbn, search) == 0) {
+            if (!invDB.readRecord(i, b)) break;
+            if (!b.isEmpty() && strcmp(b.getISBN(), search) == 0) {
                 found = i;
                 break;
             }
@@ -40,19 +40,19 @@ int cashier() {
             cout << "--- Book not found in inventory :( ---" << endl;
             cout << "--------------------------------------------------" << endl;
         } else {
-            readRecord(found, b);   // b is already loaded above, but refresh to be safe
+            invDB.readRecord(found, b);
             cout << "--------------------------------------------------" << endl;
-            cout << "Name: " << b.bookTitle
-                 << "  Price: $" << fixed << setprecision(2) << b.retail
-                 << "  Available Qty: " << b.qtyOnHand << endl;
+            cout << "Name: " << b.getTitle()
+                 << "  Price: $" << fixed << setprecision(2) << b.getRetail()
+                 << "  Available Qty: " << b.getQty() << endl;
             cout << "--------------------------------------------------" << endl;
 
             int qty;
             cout << "What quantity would you like to purchase?: ";
             cin >> qty;
 
-            while (qty > b.qtyOnHand) {
-                cout << "Limited inventory! Max purchasable: " << b.qtyOnHand << endl;
+            while (qty > b.getQty()) {
+                cout << "Limited inventory! Max purchasable: " << b.getQty() << endl;
                 cout << "Enter new quantity: ";
                 cin >> qty;
             }
@@ -81,21 +81,21 @@ int cashier() {
     cout << fixed << setprecision(2);
     for (int i = 0; i < booksListed; i++) {
         BookData b;
-        readRecord(purchasedSlot[i], b);
+        invDB.readRecord(purchasedSlot[i], b);
 
         int    qty = qtys[i];
-        double sub = b.retail * qty;
+        double sub = b.getRetail() * qty;
         total += sub;
 
         cout << setw(3)  << qty
-             << left << setw(17) << b.isbn
-             << left << setw(32) << b.bookTitle
-             << left << setw(10) << format("${:.2f}", b.retail)
+             << left << setw(17) << b.getISBN()
+             << left << setw(32) << b.getTitle()
+             << left << setw(10) << format("${:.2f}", b.getRetail())
              << left << setw(10) << format("${:.2f}", sub)
              << endl;
 
-        b.qtyOnHand -= qty;
-        writeRecord(purchasedSlot[i], b);
+        b.setQty(b.getQty() - qty);
+        invDB.writeRecord(purchasedSlot[i], b);
     }
 
     cout << endl;
