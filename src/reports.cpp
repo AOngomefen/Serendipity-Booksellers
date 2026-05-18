@@ -1,9 +1,9 @@
 //
 //  reports.cpp
-//  BooksellersSD — Part 14
+//  BooksellersSD — Part 15
 //
 //  Created by Andrea on 3/8/26.
-//  Modified for Chapter 14: bookMatch, InventoryFile, InputValidator
+//  Modified for Chapter 15: Inheritance, InventoryBook, SoldBook
 //
 
 #include "serendipity.h"
@@ -50,10 +50,9 @@ static void getDate(char* date) {
     cout << endl;
 }
 
-// Returns the count of records loaded.
-static int loadAllRecords(BookData arr[], int maxSize) {
+static int loadAllRecords(InventoryBook arr[], int maxSize) {
     int count = 0;
-    BookData b;
+    InventoryBook b;
     for (int i = 0; i < maxSize && count < maxSize; i++) {
         if (!invDB.readRecord(i, b)) break;
         if (!b.isEmpty())
@@ -69,7 +68,7 @@ void repListing() {
     getDate(date);
     cout << "[ Date: " << date << " ]" << endl;
 
-    BookData b;
+    InventoryBook b;
     bool anyFound = false;
     for (int i = 0; i < MAX_BOOKS; i++) {
         if (!invDB.readRecord(i, b)) break;
@@ -92,7 +91,7 @@ void repWholesale() {
     cout << "[ Date: " << date << " ]" << endl;
 
     double total = 0.0;
-    BookData b;
+    InventoryBook b;
     for (int i = 0; i < MAX_BOOKS; i++) {
         if (!invDB.readRecord(i, b)) break;
         if (!b.isEmpty()) {
@@ -114,7 +113,7 @@ void repRetail() {
     cout << "[ Date: " << date << " ]" << endl;
 
     double total = 0.0;
-    BookData b;
+    InventoryBook b;
     for (int i = 0; i < MAX_BOOKS; i++) {
         if (!invDB.readRecord(i, b)) break;
         if (!b.isEmpty()) {
@@ -135,7 +134,7 @@ void repQty() {
     getDate(date);
     cout << "[ Date: " << date << " ]" << endl;
 
-    BookData arr[MAX_BOOKS];
+    InventoryBook arr[MAX_BOOKS];
     int size = loadAllRecords(arr, MAX_BOOKS);
 
     // Selection sort descending by qtyOnHand
@@ -161,7 +160,7 @@ void repCost() {
     getDate(date);
     cout << "[ Date: " << date << " ]" << endl;
 
-    BookData arr[MAX_BOOKS];
+    InventoryBook arr[MAX_BOOKS];
     int size = loadAllRecords(arr, MAX_BOOKS);
 
     // Selection sort descending by retail price
@@ -187,7 +186,7 @@ void repAge() {
     getDate(date);
     cout << "[ Date: " << date << " ]" << endl;
 
-    BookData arr[MAX_BOOKS];
+    InventoryBook arr[MAX_BOOKS];
     int size = loadAllRecords(arr, MAX_BOOKS);
 
     // Selection sort ascending by dateAdded string

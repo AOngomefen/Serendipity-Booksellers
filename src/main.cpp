@@ -1,9 +1,9 @@
 //
 //  main.cpp
-//  BooksellersSD — Part 14
+//  BooksellersSD — Part 15
 //
 //  Created by Andrea on 3/8/26.
-//  Modified for Chapter 14: bookMatch, InventoryFile, InputValidator
+//  Modified for Chapter 15: Inheritance, InventoryBook, SoldBook
 //
 
 #include "serendipity.h"

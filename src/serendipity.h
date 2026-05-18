@@ -1,9 +1,9 @@
 //
 //  serendipity.h
-//  BooksellersSD — Part 14
+//  BooksellersSD — Part 15
 //
 //  Created by Andrea on 3/8/26.
-//  Modified for Chapter 14: bookMatch, InventoryFile, InputValidator
+//  Modified for Chapter 15: Inheritance, InventoryBook, SoldBook
 //
 
 #ifndef serendipity_h
@@ -20,12 +20,34 @@
 
 using namespace std;
 
+// Base class — general data about a book
 class BookData {
 private:
-    char   bookTitle[51];
-    char   isbn[14];
-    char   author[31];
-    char   publisher[31];
+    char bookTitle[51];
+    char isbn[14];
+    char author[31];
+    char publisher[31];
+
+public:
+    // Mutators
+    void setTitle (const char* str);
+    void setISBN  (const char* str);
+    void setAuthor(const char* str);
+    void setPub   (const char* str);
+
+    // Accessors
+    const char* getTitle()  const;
+    const char* getISBN()   const;
+    const char* getAuthor() const;
+    const char* getPub()    const;
+
+    // Utility
+    bool bookMatch(const char* searchStr) const;
+};
+
+// Derived class — inventory-specific data
+class InventoryBook : public BookData {
+private:
     char   dateAdded[11];
     int    qtyOnHand;
     double wholesale;
@@ -33,20 +55,12 @@ private:
 
 public:
     // Mutators
-    void setTitle    (const char* str);
-    void setISBN     (const char* str);
-    void setAuthor   (const char* str);
-    void setPub      (const char* str);
     void setDateAdded(const char* str);
     void setQty      (int qty);
     void setWholesale(double val);
     void setRetail   (double val);
 
     // Accessors
-    const char* getTitle()     const;
-    const char* getISBN()      const;
-    const char* getAuthor()    const;
-    const char* getPub()       const;
     const char* getDateAdded() const;
     int         getQty()       const;
     double      getWholesale() const;
@@ -55,7 +69,33 @@ public:
     // Utility
     int  isEmpty()   const;
     void removeBook();
-    bool bookMatch(const char* searchStr) const;
+};
+
+// Derived from InventoryBook — represents a sold book in a transaction
+class SoldBook : public InventoryBook {
+private:
+    static double taxRate;
+    static double total;
+    int    qtySold;
+    double tax;
+    double subtotal;
+
+public:
+    // Mutators
+    void setQtySold(int qty);
+    void calcTax();
+    void calcSubtotal();
+
+    // Accessors
+    int    getQtySold()  const;
+    double getTax()      const;
+    double getSubtotal() const;
+
+    // Static accessors / mutators
+    static void   setTaxRate(double rate);
+    static double getTaxRate();
+    static double getTotal();
+    static void   resetTotal();
 };
 
 const  int     MAX_BOOKS      = 20;
@@ -75,8 +115,8 @@ public:
     void close();
     bool isOpen() const;
 
-    bool readRecord (int slot, BookData& b);
-    void writeRecord(int slot, const BookData& b);
+    bool readRecord (int slot, InventoryBook& b);
+    void writeRecord(int slot, const InventoryBook& b);
     int  getBookCount();
 
     static streampos recordOffset(int slot);
@@ -97,7 +137,7 @@ int cashier();
 int reports();
 
 enum BookInfoMode { FULL, WHOLESALE, RETAIL, QTY_ONLY, AGE };
-int bookinfo(const BookData& b, BookInfoMode mode = FULL);
+int bookinfo(const InventoryBook& b, BookInfoMode mode = FULL);
 
 void lookUpBook();
 void addBook();

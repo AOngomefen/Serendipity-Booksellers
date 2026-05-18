@@ -1,9 +1,9 @@
 //
 //  invmenu.cpp
-//  BooksellersSD — Part 14
+//  BooksellersSD — Part 15
 //
 //  Created by Andrea on 3/8/26.
-//  Modified for Chapter 14: bookMatch, InventoryFile, InputValidator
+//  Modified for Chapter 15: Inheritance, InventoryBook, SoldBook
 //
 
 #include "serendipity.h"
@@ -49,7 +49,7 @@ static int findBook(const char* prompt) {
     cin.getline(search, 51);
     strUpper(search);
 
-    BookData b;
+    InventoryBook b;
     for (int i = 0; i < MAX_BOOKS; i++) {
         if (!invDB.readRecord(i, b)) break;
         if (b.isEmpty()) continue;
@@ -76,7 +76,7 @@ void lookUpBook() {
         cout << "--------------------------------------------------" << endl;
         int slot = findBook("Enter partial or full book title: ");
         if (slot != -1) {
-            BookData b;
+            InventoryBook b;
             invDB.readRecord(slot, b);
             bookinfo(b, FULL);
         }
@@ -97,7 +97,7 @@ void addBook() {
 
         // Find the first empty slot in the file.
         int slot = -1;
-        BookData b;
+        InventoryBook b;
         for (int i = 0; i < MAX_BOOKS; i++) {
             if (!invDB.readRecord(i, b)) break;
             if (b.isEmpty()) { slot = i; break; }
@@ -159,7 +159,7 @@ void editBook() {
     int slot = findBook("Enter partial or full book title to edit: ");
     if (slot == -1) return;
 
-    BookData b;
+    InventoryBook b;
     invDB.readRecord(slot, b);
     bookinfo(b, FULL);
 
@@ -204,7 +204,7 @@ void deleteBook() {
     int slot = findBook("Enter partial or full book title to delete: ");
     if (slot == -1) return;
 
-    BookData b;
+    InventoryBook b;
     invDB.readRecord(slot, b);
     bookinfo(b, FULL);
 
@@ -213,8 +213,8 @@ void deleteBook() {
     cin >> confirm;
 
     if (confirm == 'y' || confirm == 'Y') {
-        b.removeBook();           // zeroes the object in memory
-        invDB.writeRecord(slot, b); // writes the zeroed record back to the file
+        b.removeBook();
+        invDB.writeRecord(slot, b);
         cout << "Book successfully deleted from inventory." << endl;
     } else {
         cout << "Deletion cancelled." << endl;
