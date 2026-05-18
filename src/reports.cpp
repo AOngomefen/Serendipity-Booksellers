@@ -1,9 +1,9 @@
 //
 //  reports.cpp
-//  BooksellersSD — Part 12
+//  BooksellersSD — Part 16
 //
-//  Created by Andrea 👾 on 3/8/26.
-//  Modified for Chapter 12: File-based inventory
+//  Created by Andrea on 3/8/26.
+//  Modified for Chapter 16: Exceptions, Templates, and the STL
 //
 
 #include "serendipity.h"
@@ -24,12 +24,7 @@ int reports() {
         cout << "7. Return to Main Menu\n";
         cout << endl;
 
-        cout << "Enter Your Choice: ";
-        cin >> choice;
-        while (choice < 1 || choice > 7) {
-            cout << "Please enter a number in the range 1-7: ";
-            cin >> choice;
-        }
+        choice = InputValidator::getInt("Enter Your Choice: ", 1, 7);
 
         switch (choice) {
             case 1: cout << "--------------------------------------------------" << endl; repListing();   break;
@@ -55,13 +50,12 @@ static void getDate(char* date) {
     cout << endl;
 }
 
-// Returns the count of records loaded.
-static int loadAllRecords(BookData arr[], int maxSize) {
+static int loadAllRecords(InventoryBook arr[], int maxSize) {
     int count = 0;
-    BookData b;
+    InventoryBook b;
     for (int i = 0; i < maxSize && count < maxSize; i++) {
-        if (!readRecord(i, b)) break;
-        if (!isEmpty(b))
+        if (!invDB.readRecord(i, b)) break;
+        if (!b.isEmpty())
             arr[count++] = b;
     }
     return count;
@@ -74,11 +68,11 @@ void repListing() {
     getDate(date);
     cout << "[ Date: " << date << " ]" << endl;
 
-    BookData b;
+    InventoryBook b;
     bool anyFound = false;
     for (int i = 0; i < MAX_BOOKS; i++) {
-        if (!readRecord(i, b)) break;
-        if (!isEmpty(b)) {
+        if (!invDB.readRecord(i, b)) break;
+        if (!b.isEmpty()) {
             bookinfo(b, FULL);
             cout << "--------------------------------------------------" << endl;
             anyFound = true;
@@ -97,13 +91,13 @@ void repWholesale() {
     cout << "[ Date: " << date << " ]" << endl;
 
     double total = 0.0;
-    BookData b;
+    InventoryBook b;
     for (int i = 0; i < MAX_BOOKS; i++) {
-        if (!readRecord(i, b)) break;
-        if (!isEmpty(b)) {
+        if (!invDB.readRecord(i, b)) break;
+        if (!b.isEmpty()) {
             bookinfo(b, WHOLESALE);
             cout << "--------------------------------------------------" << endl;
-            total += b.wholesale * b.qtyOnHand;
+            total += b.getWholesale() * b.getQty();
         }
     }
     cout << "[ Total Wholesale Value: $" << fixed << setprecision(2) << total << " ]" << endl;
@@ -119,13 +113,13 @@ void repRetail() {
     cout << "[ Date: " << date << " ]" << endl;
 
     double total = 0.0;
-    BookData b;
+    InventoryBook b;
     for (int i = 0; i < MAX_BOOKS; i++) {
-        if (!readRecord(i, b)) break;
-        if (!isEmpty(b)) {
+        if (!invDB.readRecord(i, b)) break;
+        if (!b.isEmpty()) {
             bookinfo(b, RETAIL);
             cout << "--------------------------------------------------" << endl;
-            total += b.retail * b.qtyOnHand;
+            total += b.getRetail() * b.getQty();
         }
     }
     cout << "[ Total Retail Value: $" << fixed << setprecision(2) << total << " ]" << endl;
@@ -140,14 +134,14 @@ void repQty() {
     getDate(date);
     cout << "[ Date: " << date << " ]" << endl;
 
-    BookData arr[MAX_BOOKS];
+    InventoryBook arr[MAX_BOOKS];
     int size = loadAllRecords(arr, MAX_BOOKS);
 
     // Selection sort descending by qtyOnHand
     for (int i = 0; i < size - 1; i++) {
         int maxIdx = i;
         for (int j = i + 1; j < size; j++)
-            if (arr[j].qtyOnHand > arr[maxIdx].qtyOnHand) maxIdx = j;
+            if (arr[j].getQty() > arr[maxIdx].getQty()) maxIdx = j;
         swap(arr[i], arr[maxIdx]);
     }
 
@@ -166,14 +160,14 @@ void repCost() {
     getDate(date);
     cout << "[ Date: " << date << " ]" << endl;
 
-    BookData arr[MAX_BOOKS];
+    InventoryBook arr[MAX_BOOKS];
     int size = loadAllRecords(arr, MAX_BOOKS);
 
     // Selection sort descending by retail price
     for (int i = 0; i < size - 1; i++) {
         int maxIdx = i;
         for (int j = i + 1; j < size; j++)
-            if (arr[j].retail > arr[maxIdx].retail) maxIdx = j;
+            if (arr[j].getRetail() > arr[maxIdx].getRetail()) maxIdx = j;
         swap(arr[i], arr[maxIdx]);
     }
 
@@ -192,14 +186,14 @@ void repAge() {
     getDate(date);
     cout << "[ Date: " << date << " ]" << endl;
 
-    BookData arr[MAX_BOOKS];
+    InventoryBook arr[MAX_BOOKS];
     int size = loadAllRecords(arr, MAX_BOOKS);
 
     // Selection sort ascending by dateAdded string
     for (int i = 0; i < size - 1; i++) {
         int minIdx = i;
         for (int j = i + 1; j < size; j++)
-            if (strcmp(arr[j].dateAdded, arr[minIdx].dateAdded) < 0) minIdx = j;
+            if (strcmp(arr[j].getDateAdded(), arr[minIdx].getDateAdded()) < 0) minIdx = j;
         swap(arr[i], arr[minIdx]);
     }
 
