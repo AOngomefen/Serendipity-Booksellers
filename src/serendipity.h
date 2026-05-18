@@ -1,9 +1,9 @@
 //
 //  serendipity.h
-//  BooksellersSD — Part 12
+//  BooksellersSD — Part 15
 //
-//  Created by Andrea 👾 on 3/8/26.
-//  Modified for Chapter 12: File-based inventory
+//  Created by Andrea on 3/8/26.
+//  Modified for Chapter 15: Inheritance, InventoryBook, SoldBook
 //
 
 #ifndef serendipity_h
@@ -20,43 +20,116 @@
 
 using namespace std;
 
-struct BookData {
-    char   bookTitle[51];
-    char   isbn[14];
-    char   author[31];
-    char   publisher[31];
+// Base class — general data about a book
+class BookData {
+private:
+    char bookTitle[51];
+    char isbn[14];
+    char author[31];
+    char publisher[31];
+
+public:
+    // Mutators
+    void setTitle (const char* str);
+    void setISBN  (const char* str);
+    void setAuthor(const char* str);
+    void setPub   (const char* str);
+
+    // Accessors
+    const char* getTitle()  const;
+    const char* getISBN()   const;
+    const char* getAuthor() const;
+    const char* getPub()    const;
+
+    // Utility
+    bool bookMatch(const char* searchStr) const;
+};
+
+// Derived class — inventory-specific data
+class InventoryBook : public BookData {
+private:
     char   dateAdded[11];
     int    qtyOnHand;
     double wholesale;
     double retail;
+
+public:
+    // Mutators
+    void setDateAdded(const char* str);
+    void setQty      (int qty);
+    void setWholesale(double val);
+    void setRetail   (double val);
+
+    // Accessors
+    const char* getDateAdded() const;
+    int         getQty()       const;
+    double      getWholesale() const;
+    double      getRetail()    const;
+
+    // Utility
+    int  isEmpty()   const;
+    void removeBook();
 };
 
-extern fstream invFile;
-const  char    INV_FILENAME[] = "inventory.dat";
-const  int     MAX_BOOKS      = 20;
+// Derived from InventoryBook — represents a sold book in a transaction
+class SoldBook : public InventoryBook {
+private:
+    static double taxRate;
+    static double total;
+    int    qtySold;
+    double tax;
+    double subtotal;
 
-void setTitle    (char* str,  BookData& b);
-void setISBN     (char* str,  BookData& b);
-void setAuthor   (char* str,  BookData& b);
-void setPub      (char* str,  BookData& b);
-void setDateAdded(char* str,  BookData& b);
-void setQty      (int qty,    BookData& b);
-void setWholesale(double val, BookData& b);
-void setRetail   (double val, BookData& b);
-int  isEmpty     (const BookData& b);   // 1 = empty slot
-void removeBook  (BookData& b);         // zeroes the struct
+public:
+    // Mutators
+    void setQtySold(int qty);
+    void calcTax();
+    void calcSubtotal();
+
+    // Accessors
+    int    getQtySold()  const;
+    double getTax()      const;
+    double getSubtotal() const;
+
+    // Static accessors / mutators
+    static void   setTaxRate(double rate);
+    static double getTaxRate();
+    static double getTotal();
+    static void   resetTotal();
+};
+
+const  int     MAX_BOOKS      = 20;
 
 void strUpper(char* str);
 
+class InventoryFile {
+private:
+    fstream file;
+    const char* filename;
 
-inline streampos recordOffset(int slot){ return slot * sizeof(BookData); }
+public:
+    InventoryFile(const char* fname);
+    ~InventoryFile();
 
-bool readRecord (int slot, BookData& b);
+    bool open();
+    void close();
+    bool isOpen() const;
 
-// Write b to the file at the given slot.
-void writeRecord(int slot, const BookData& b);
+    bool readRecord (int slot, InventoryBook& b);
+    void writeRecord(int slot, const InventoryBook& b);
+    int  getBookCount();
 
-int  getBookCount();
+    static streampos recordOffset(int slot);
+};
+
+extern InventoryFile invDB;
+
+class InputValidator {
+public:
+    static int  getInt(const char* prompt, int min, int max);
+    static double getDouble(const char* prompt);
+    static void getString(const char* prompt, char* buf, int maxLen);
+};
 
 int mainmenu();
 int invmenu();
@@ -64,7 +137,7 @@ int cashier();
 int reports();
 
 enum BookInfoMode { FULL, WHOLESALE, RETAIL, QTY_ONLY, AGE };
-int bookinfo(const BookData& b, BookInfoMode mode = FULL);
+int bookinfo(const InventoryBook& b, BookInfoMode mode = FULL);
 
 void lookUpBook();
 void addBook();

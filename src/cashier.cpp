@@ -1,36 +1,38 @@
 //
 //  cashier.cpp
-//  BooksellersSD — Part 12
+//  BooksellersSD — Part 15
 //
-//  Created by Andrea 👾 on 3/8/26.
-//  Modified for Chapter 12: File-based inventory
+//  Created by Andrea on 3/8/26.
+//  Modified for Chapter 15: Inheritance, InventoryBook, SoldBook
 //
 
 #include "serendipity.h"
 
 int cashier() {
     char date[20];
-    int  purchasedSlot[20];   
-    int  qtys[20];
-    int  booksListed = 0;
-    double total = 0.0;
-    const double TAX = .06;
-
     cin.ignore();
     cout << "What is the Date: ";
     cin.getline(date, 20);
 
-    char addingBook;
-    do {
+    int numTitles;
+    numTitles = InputValidator::getInt("How many titles is the customer purchasing? ", 1, 20);
+
+    SoldBook* cart = new SoldBook[numTitles];
+    int* slots = new int[numTitles];
+    int booksListed = 0;
+
+    SoldBook::resetTotal();
+
+    for (int t = 0; t < numTitles; t++) {
         char search[14];
-        cout << "What book do you wish to purchase? Please insert ISBN: ";
+        cout << "Enter ISBN for title " << (t + 1) << ": ";
         cin >> search;
 
-        int  found = -1;
-        BookData b;
+        int found = -1;
+        InventoryBook b;
         for (int i = 0; i < MAX_BOOKS; i++) {
-            if (!readRecord(i, b)) break;
-            if (!isEmpty(b) && strcmp(b.isbn, search) == 0) {
+            if (!invDB.readRecord(i, b)) break;
+            if (!b.isEmpty() && strcmp(b.getISBN(), search) == 0) {
                 found = i;
                 break;
             }
@@ -39,36 +41,49 @@ int cashier() {
         if (found == -1) {
             cout << "--- Book not found in inventory :( ---" << endl;
             cout << "--------------------------------------------------" << endl;
-        } else {
-            readRecord(found, b);   // b is already loaded above, but refresh to be safe
-            cout << "--------------------------------------------------" << endl;
-            cout << "Name: " << b.bookTitle
-                 << "  Price: $" << fixed << setprecision(2) << b.retail
-                 << "  Available Qty: " << b.qtyOnHand << endl;
-            cout << "--------------------------------------------------" << endl;
-
-            int qty;
-            cout << "What quantity would you like to purchase?: ";
-            cin >> qty;
-
-            while (qty > b.qtyOnHand) {
-                cout << "Limited inventory! Max purchasable: " << b.qtyOnHand << endl;
-                cout << "Enter new quantity: ";
-                cin >> qty;
-            }
-
-            purchasedSlot[booksListed] = found;
-            qtys[booksListed]          = qty;
-            booksListed++;
-            cout << "--- Book added to cart! ---" << endl;
+            t--;
+            continue;
         }
 
-        cin.ignore(1000, '\n');
-        cout << "Are you finished adding books to your cart? (y/n): ";
-        cin >> addingBook;
+        invDB.readRecord(found, b);
+        cout << "--------------------------------------------------" << endl;
+        cout << "Name: " << b.getTitle()
+             << "  Price: $" << fixed << setprecision(2) << b.getRetail()
+             << "  Available Qty: " << b.getQty() << endl;
+        cout << "--------------------------------------------------" << endl;
 
-    } while (addingBook == 'n' || addingBook == 'N');
+        int qty;
+        cout << "What quantity would you like to purchase?: ";
+        cin >> qty;
 
+        while (qty > b.getQty()) {
+            cout << "Limited inventory! Max purchasable: " << b.getQty() << endl;
+            cout << "Enter new quantity: ";
+            cin >> qty;
+        }
+
+        // Copy inventory data into the SoldBook
+        cart[booksListed].setTitle(b.getTitle());
+        cart[booksListed].setISBN(b.getISBN());
+        cart[booksListed].setAuthor(b.getAuthor());
+        cart[booksListed].setPub(b.getPub());
+        cart[booksListed].setDateAdded(b.getDateAdded());
+        cart[booksListed].setQty(b.getQty());
+        cart[booksListed].setWholesale(b.getWholesale());
+        cart[booksListed].setRetail(b.getRetail());
+
+        cart[booksListed].setQtySold(qty);
+        cart[booksListed].calcTax();
+        cart[booksListed].calcSubtotal();
+
+        slots[booksListed] = found;
+        booksListed++;
+
+        cout << "--- Book added to cart! ---" << endl;
+    }
+
+    // Display sales slip
+    cout << endl;
     cout << "--- Opening Checkout! ---" << endl;
     cout << "Date: " << date << endl << endl;
     cout << setw(3) << "Qty "
@@ -80,30 +95,34 @@ int cashier() {
 
     cout << fixed << setprecision(2);
     for (int i = 0; i < booksListed; i++) {
-        BookData b;
-        readRecord(purchasedSlot[i], b);
-
-        int    qty = qtys[i];
-        double sub = b.retail * qty;
-        total += sub;
-
-        cout << setw(3)  << qty
-             << left << setw(17) << b.isbn
-             << left << setw(32) << b.bookTitle
-             << left << setw(10) << format("${:.2f}", b.retail)
-             << left << setw(10) << format("${:.2f}", sub)
+        cout << setw(3)  << cart[i].getQtySold()
+             << left << setw(17) << cart[i].getISBN()
+             << left << setw(32) << cart[i].getTitle()
+             << left << setw(10) << format("${:.2f}", cart[i].getRetail())
+             << left << setw(10) << format("${:.2f}", cart[i].getSubtotal())
              << endl;
 
-        b.qtyOnHand -= qty;
-        writeRecord(purchasedSlot[i], b);
+        // Update inventory quantity
+        InventoryBook inv;
+        invDB.readRecord(slots[i], inv);
+        inv.setQty(inv.getQty() - cart[i].getQtySold());
+        invDB.writeRecord(slots[i], inv);
     }
 
+    double subtotal = SoldBook::getTotal();
+    double taxTotal = 0.0;
+    for (int i = 0; i < booksListed; i++)
+        taxTotal += cart[i].getTax();
+
     cout << endl;
-    cout << right << setw(12) << "Subtotal: $" << total            << endl;
-    cout << right << setw(12) << "Tax: $"      << total * TAX      << endl;
-    cout << right << setw(12) << "Total: $"    << total * (1 + TAX)<< endl;
+    cout << right << setw(12) << "Subtotal: $" << (subtotal - taxTotal) << endl;
+    cout << right << setw(12) << "Tax: $"      << taxTotal              << endl;
+    cout << right << setw(12) << "Total: $"    << subtotal              << endl;
     cout << endl;
     cout << "Thank you for shopping at Serendipity!" << endl;
+
+    delete[] slots;
+    delete[] cart;
 
     return 0;
 }

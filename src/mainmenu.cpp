@@ -1,9 +1,9 @@
 //
 //  mainmenu.cpp
-//  BooksellersSD — Part 12
+//  BooksellersSD — Part 15
 //
-//  Created by Andrea 👾 on 3/8/26.
-//  Modified for Chapter 12: File-based inventory
+//  Created by Andrea on 3/8/26.
+//  Modified for Chapter 15: Inheritance, InventoryBook, SoldBook
 //
 
 #include "serendipity.h"
@@ -22,25 +22,7 @@ int mainmenu() {
         cout << "4. Exit\n";
         cout << endl;
 
-        cout << "Enter Your Choice: ";
-
-        for (;;) {
-            if (cin >> choice) break;
-            cout << "Please refrain from entering a string value :( ... " << endl;
-            cin.clear();
-            cin.ignore(1000, '\n');
-        }
-        cin.ignore();
-
-        while (choice < 1 || choice > 4) {
-            cout << "Invalid choice... Please enter 1-4: ";
-            for (;;) {
-                if (cin >> choice) break;
-                cout << "Please refrain from entering a string value :( ... " << endl;
-                cin.clear();
-                cin.ignore(1000, '\n');
-            }
-        }
+        choice = InputValidator::getInt("Enter Your Choice: ", 1, 4);
 
         switch (choice) {
             case 1:
