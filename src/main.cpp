@@ -1,9 +1,9 @@
 //
 //  main.cpp
-//  BooksellersSD — Part 12
+//  BooksellersSD — Part 13
 //
-//  Created by Andrea 👾 on 3/8/26.
-//  Modified for Chapter 12: File-based inventory
+//  Created by Andrea on 3/8/26.
+//  Modified for Chapter 13: BookData class with private members
 //
 
 #include "serendipity.h"
@@ -54,7 +54,7 @@ int getBookCount() {
     int count = 0;
     BookData b;
     for (int i = 0; i < MAX_BOOKS; i++) {
-        if (readRecord(i, b) && !isEmpty(b))
+        if (readRecord(i, b) && !b.isEmpty())
             count++;
     }
     return count;

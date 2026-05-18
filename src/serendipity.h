@@ -1,9 +1,9 @@
 //
 //  serendipity.h
-//  BooksellersSD — Part 12
+//  BooksellersSD — Part 13
 //
-//  Created by Andrea 👾 on 3/8/26.
-//  Modified for Chapter 12: File-based inventory
+//  Created by Andrea on 3/8/26.
+//  Modified for Chapter 13: BookData class with private members
 //
 
 #ifndef serendipity_h
@@ -20,7 +20,8 @@
 
 using namespace std;
 
-struct BookData {
+class BookData {
+private:
     char   bookTitle[51];
     char   isbn[14];
     char   author[31];
@@ -29,22 +30,36 @@ struct BookData {
     int    qtyOnHand;
     double wholesale;
     double retail;
+
+public:
+    // Mutators
+    void setTitle    (const char* str);
+    void setISBN     (const char* str);
+    void setAuthor   (const char* str);
+    void setPub      (const char* str);
+    void setDateAdded(const char* str);
+    void setQty      (int qty);
+    void setWholesale(double val);
+    void setRetail   (double val);
+
+    // Accessors
+    const char* getTitle()     const;
+    const char* getISBN()      const;
+    const char* getAuthor()    const;
+    const char* getPub()       const;
+    const char* getDateAdded() const;
+    int         getQty()       const;
+    double      getWholesale() const;
+    double      getRetail()    const;
+
+    // Utility
+    int  isEmpty()   const;
+    void removeBook();
 };
 
 extern fstream invFile;
 const  char    INV_FILENAME[] = "inventory.dat";
 const  int     MAX_BOOKS      = 20;
-
-void setTitle    (char* str,  BookData& b);
-void setISBN     (char* str,  BookData& b);
-void setAuthor   (char* str,  BookData& b);
-void setPub      (char* str,  BookData& b);
-void setDateAdded(char* str,  BookData& b);
-void setQty      (int qty,    BookData& b);
-void setWholesale(double val, BookData& b);
-void setRetail   (double val, BookData& b);
-int  isEmpty     (const BookData& b);   // 1 = empty slot
-void removeBook  (BookData& b);         // zeroes the struct
 
 void strUpper(char* str);
 

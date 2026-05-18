@@ -1,9 +1,9 @@
 //
 //  reports.cpp
-//  BooksellersSD — Part 12
+//  BooksellersSD — Part 13
 //
-//  Created by Andrea 👾 on 3/8/26.
-//  Modified for Chapter 12: File-based inventory
+//  Created by Andrea on 3/8/26.
+//  Modified for Chapter 13: BookData class with private members
 //
 
 #include "serendipity.h"
@@ -61,7 +61,7 @@ static int loadAllRecords(BookData arr[], int maxSize) {
     BookData b;
     for (int i = 0; i < maxSize && count < maxSize; i++) {
         if (!readRecord(i, b)) break;
-        if (!isEmpty(b))
+        if (!b.isEmpty())
             arr[count++] = b;
     }
     return count;
@@ -78,7 +78,7 @@ void repListing() {
     bool anyFound = false;
     for (int i = 0; i < MAX_BOOKS; i++) {
         if (!readRecord(i, b)) break;
-        if (!isEmpty(b)) {
+        if (!b.isEmpty()) {
             bookinfo(b, FULL);
             cout << "--------------------------------------------------" << endl;
             anyFound = true;
@@ -100,10 +100,10 @@ void repWholesale() {
     BookData b;
     for (int i = 0; i < MAX_BOOKS; i++) {
         if (!readRecord(i, b)) break;
-        if (!isEmpty(b)) {
+        if (!b.isEmpty()) {
             bookinfo(b, WHOLESALE);
             cout << "--------------------------------------------------" << endl;
-            total += b.wholesale * b.qtyOnHand;
+            total += b.getWholesale() * b.getQty();
         }
     }
     cout << "[ Total Wholesale Value: $" << fixed << setprecision(2) << total << " ]" << endl;
@@ -122,10 +122,10 @@ void repRetail() {
     BookData b;
     for (int i = 0; i < MAX_BOOKS; i++) {
         if (!readRecord(i, b)) break;
-        if (!isEmpty(b)) {
+        if (!b.isEmpty()) {
             bookinfo(b, RETAIL);
             cout << "--------------------------------------------------" << endl;
-            total += b.retail * b.qtyOnHand;
+            total += b.getRetail() * b.getQty();
         }
     }
     cout << "[ Total Retail Value: $" << fixed << setprecision(2) << total << " ]" << endl;
@@ -147,7 +147,7 @@ void repQty() {
     for (int i = 0; i < size - 1; i++) {
         int maxIdx = i;
         for (int j = i + 1; j < size; j++)
-            if (arr[j].qtyOnHand > arr[maxIdx].qtyOnHand) maxIdx = j;
+            if (arr[j].getQty() > arr[maxIdx].getQty()) maxIdx = j;
         swap(arr[i], arr[maxIdx]);
     }
 
@@ -173,7 +173,7 @@ void repCost() {
     for (int i = 0; i < size - 1; i++) {
         int maxIdx = i;
         for (int j = i + 1; j < size; j++)
-            if (arr[j].retail > arr[maxIdx].retail) maxIdx = j;
+            if (arr[j].getRetail() > arr[maxIdx].getRetail()) maxIdx = j;
         swap(arr[i], arr[maxIdx]);
     }
 
@@ -199,7 +199,7 @@ void repAge() {
     for (int i = 0; i < size - 1; i++) {
         int minIdx = i;
         for (int j = i + 1; j < size; j++)
-            if (strcmp(arr[j].dateAdded, arr[minIdx].dateAdded) < 0) minIdx = j;
+            if (strcmp(arr[j].getDateAdded(), arr[minIdx].getDateAdded()) < 0) minIdx = j;
         swap(arr[i], arr[minIdx]);
     }
 
